@@ -65,6 +65,13 @@ resource "azurerm_lb_backend_address_pool_address" "main" {
   ip_address              = "10.0.0.10"
 }
 
+resource "azurerm_availability_set" "main" {
+  name                = "${var.prefix}-avail-set"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+}
+
 resource "azurerm_network_security_group" "main" {
   name                = "${var.prefix}-nsg"
   location            = azurerm_resource_group.main.location
@@ -80,10 +87,6 @@ resource "azurerm_network_security_group" "main" {
     destination_port_range     = "*"
     source_address_prefix      = "VirtualNetwork"
     destination_address_prefix = "VirtualNetwork"
-  }
-
-  tags = {
-    udacity = "nd-prj1"
   }
 }
 
