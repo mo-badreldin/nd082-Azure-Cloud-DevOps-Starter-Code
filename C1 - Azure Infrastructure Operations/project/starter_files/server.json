@@ -1,8 +1,8 @@
 {
 	"variables": {
-		"client_id": "{{env `ARM_CLIENT_ID`}}",
-		"client_secret": "{{env `ARM_CLIENT_SECRET`}}",
-		"subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}"
+		"subscription_id": "",
+		"client_id": "",
+		"client_secret": ""
 	},
 	"builders": [
 		{
@@ -10,19 +10,24 @@
 			"client_id": "{{user `client_id`}}",
 			"client_secret": "{{user `client_secret`}}",
 			"subscription_id": "{{user `subscription_id`}}",
+			
+			
+			"managed_image_resource_group_name": "prj-img-rg",
+			"managed_image_name": "nd-prj1-server-image",
 			"os_type": "Linux",
 			"image_publisher": "Canonical",
 			"image_offer": "UbuntuServer",
 			"image_sku": "18.04-LTS",
-			"managed_image_resource_group_name": "nd-prj1-rg",
-			"managed_image_name": "nd-prj1-server-image",
-			"location": "Germany West Central",
+			"azure_tags": {
+				"project": "nd-prj1"
+			},
+			"location": "East US",
 			"vm_size": "Standard_B1s"
 		}
 	],
 	"provisioners": [
 		{
-			"type: "shell",
+			"type": "shell",
 			"inline": [
 				"apt-get update",
 				"apt-get upgrade -y",
