@@ -10,6 +10,8 @@ variable "username" {
   description = "The username of the account of the vm"
 }
 
-variable "password" {
-  description = "The password of the account of the vm"
+variable "vm_machine_count" {
+  description = "The number of virtual machines to deploy"
+  type = number
+  default = 3
 }

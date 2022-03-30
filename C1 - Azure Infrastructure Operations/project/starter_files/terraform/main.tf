@@ -5,6 +5,10 @@ provider "azurerm" {
 resource "azurerm_resource_group" "main" {
   name     = "${var.prefix}-resource-group"
   location = var.location
+
+  tags = {
+    project = "nd-prj1"
+  }
 }
 
 resource "azurerm_virtual_network" "main" {
@@ -12,6 +16,10 @@ resource "azurerm_virtual_network" "main" {
   address_space       = ["10.0.0.0/24"]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+
+  tags = {
+    project = "nd-prj1"
+  }
 }
 
 
@@ -33,6 +41,10 @@ resource "azurerm_network_interface" "main" {
     private_ip_address_allocation = "Dynamic"
     # public_ip_address_id          = azurerm_public_ip.main.id
   }
+
+  tags = {
+    project = "nd-prj1"
+  }
 }
 
 resource "azurerm_public_ip" "main"{
@@ -40,6 +52,10 @@ resource "azurerm_public_ip" "main"{
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   allocation_method       = "Static"
+
+  tags = {
+    project = "nd-prj1"
+  }
 }
 
 resource "azurerm_lb" "main" {
@@ -50,6 +66,10 @@ resource "azurerm_lb" "main" {
   frontend_ip_configuration {
     name                 = "internal"
     public_ip_address_id = azurerm_public_ip.main.id
+  }
+
+  tags = {
+    project = "nd-prj1"
   }
 }
 
@@ -70,6 +90,10 @@ resource "azurerm_availability_set" "main" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 
+  tags = {
+    project = "nd-prj1"
+  }
+
 }
 
 resource "azurerm_network_security_group" "main" {
@@ -88,29 +112,60 @@ resource "azurerm_network_security_group" "main" {
     source_address_prefix      = "VirtualNetwork"
     destination_address_prefix = "VirtualNetwork"
   }
+
+  tags = {
+    project = "nd-prj1"
+  }
 }
 
+
 resource "azurerm_linux_virtual_machine" "main" {
-  name                            = "${var.prefix}-vm"
+  count                           = var.vm_machine_count
+  name                            = "${var.prefix}-vm-${count.index}"
   resource_group_name             = azurerm_resource_group.main.name
   location                        = azurerm_resource_group.main.location
   size                            = "Standard_B1s"
   admin_username                  = "${var.username}"
-  admin_password                  = "${var.password}"
-  disable_password_authentication = false
+   admin_ssh_key {
+    username   = "${var.username}"
+    public_key = file("~/.ssh/id_rsa.pub")
+  } 
+  disable_password_authentication = true
   network_interface_ids = [
     azurerm_network_interface.main.id,
   ]
+  availability_set_id = azurerm_availability_set.main.id
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
+  source_image_id = 
 
   os_disk {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
   }
+
+  tags = {
+    project = "nd-prj1"
+  }
+}
+
+
+resource "azurerm_managed_disk" "main" {
+  name                 = "${var.prefix}-managed-disk"
+  location             = urerm_resource_group.main.location
+  resource_group_name  = azurerm_resource_group.main.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = "1024"
+
+  tags = {
+    project = "nd-prj1"
+  }
+
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "main" {
+  virtual_machine_id = azurerm_linux_virtual_machine.main.id
+  managed_disk_id    = azurerm_managed_disk.main.id
+  lun                = 0
+  caching            = "None"
 }
