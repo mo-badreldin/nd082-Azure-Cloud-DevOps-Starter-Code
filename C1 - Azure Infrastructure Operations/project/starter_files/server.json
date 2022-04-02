@@ -1,19 +1,22 @@
 {
 	"variables": {
-		"subscription_id": "",
-		"client_id": "",
-		"client_secret": ""
+		"subscription_id": "{{env `TF_VAR_subscription_id`}}",
+		"client_id": "{{env `TF_VAR_client_id`}}",
+		"client_secret": "{{env `TF_VAR_client_secret`}}",
+		"tenant_id": "{{env `TF_VAR_tenant_id`}}"
 	},
 	"builders": [
 		{
 			"type": "azure-arm",
-			"client_id": "{{user `client_id`}}",
-			"client_secret": "{{user `client_secret`}}",
+
 			"subscription_id": "{{user `subscription_id`}}",
-			
-			
-			"managed_image_resource_group_name": "prj-img-rg",
+			"client_id": "{{user `client_id`}}",
+			"client_secret": "{{ user `client_secret`}}",
+			"tenant_id": "{{user `tenant_id`}}",
+
+			"managed_image_resource_group_name": "packer-img-rg",
 			"managed_image_name": "nd-prj1-server-image",
+
 			"os_type": "Linux",
 			"image_publisher": "Canonical",
 			"image_offer": "UbuntuServer",
@@ -21,7 +24,7 @@
 			"azure_tags": {
 				"project": "nd-prj1"
 			},
-			"location": "East US",
+			"location": "Germany West Central",
 			"vm_size": "Standard_B1s"
 		}
 	],
