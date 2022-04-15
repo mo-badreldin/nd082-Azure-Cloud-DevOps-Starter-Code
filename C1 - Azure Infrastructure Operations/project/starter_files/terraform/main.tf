@@ -31,12 +31,13 @@ resource "azurerm_subnet" "internal" {
 }
 
 resource "azurerm_network_interface" "main" {
-  name                = "${var.prefix}-nic"
+  count               = var.vm_machine_count
+  name                = "${var.prefix}-nic-${count.index}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
 
   ip_configuration {
-    name                          = "internal"
+    name                          = "internal-${count.index}"
     subnet_id                     = azurerm_subnet.internal.id
     private_ip_address_allocation = "Dynamic"
     # public_ip_address_id          = azurerm_public_ip.main.id
@@ -47,11 +48,12 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
-resource "azurerm_public_ip" "main"{
+resource "azurerm_public_ip" "main" {
   name                = "${var.prefix}-pip"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  allocation_method       = "Static"
+  allocation_method   = "Static"
+  sku                 = "Standard"
 
   tags = {
     project = "nd-prj1"
@@ -62,6 +64,7 @@ resource "azurerm_lb" "main" {
   name                = "${var.prefix}-lb"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  sku                 = "Standard"
 
   frontend_ip_configuration {
     name                 = "internal"
@@ -75,13 +78,13 @@ resource "azurerm_lb" "main" {
 
 resource "azurerm_lb_backend_address_pool" "main" {
   name            = "${var.prefix}-lb-backend-pool"
-  loadbalancer_id = data.azurerm_lb.main.id
+  loadbalancer_id = azurerm_lb.main.id
 }
 
 resource "azurerm_lb_backend_address_pool_address" "main" {
   name                    = "${var.prefix}-lb-backend-pool-address"
-  backend_address_pool_id = data.azurerm_lb_backend_address_pool.main.id
-  virtual_network_id      = data.azurerm_virtual_network.main.id
+  backend_address_pool_id = azurerm_lb_backend_address_pool.main.id
+  virtual_network_id      = azurerm_virtual_network.main.id
   ip_address              = "10.0.0.10"
 }
 
@@ -89,6 +92,7 @@ resource "azurerm_availability_set" "main" {
   name                = "${var.prefix}-avail-set"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  platform_fault_domain_count = 2
 
   tags = {
     project = "nd-prj1"
@@ -120,23 +124,23 @@ resource "azurerm_network_security_group" "main" {
 
 
 resource "azurerm_linux_virtual_machine" "main" {
-  count                           = var.vm_machine_count
-  name                            = "${var.prefix}-vm-${count.index}"
-  resource_group_name             = azurerm_resource_group.main.name
-  location                        = azurerm_resource_group.main.location
-  size                            = "Standard_B1s"
-  admin_username                  = "${var.username}"
-   admin_ssh_key {
-    username   = "${var.username}"
+  count               = var.vm_machine_count
+  name                = "${var.prefix}-vm-${count.index}"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  size                = "Standard_B1s"
+  admin_username      = var.username
+  admin_ssh_key {
+    username   = var.username
     public_key = file("~/.ssh/id_rsa.pub")
-  } 
+  }
   disable_password_authentication = true
   network_interface_ids = [
-    azurerm_network_interface.main.id,
+    azurerm_network_interface.main[count.index].id,
   ]
   availability_set_id = azurerm_availability_set.main.id
 
-  source_image_id = 
+  source_image_id = var.source_image_id
 
   os_disk {
     storage_account_type = "Standard_LRS"
@@ -150,8 +154,9 @@ resource "azurerm_linux_virtual_machine" "main" {
 
 
 resource "azurerm_managed_disk" "main" {
-  name                 = "${var.prefix}-managed-disk"
-  location             = urerm_resource_group.main.location
+  count               = var.vm_machine_count
+  name                 = "${var.prefix}-managed-disk-${count.index}"
+  location             = azurerm_resource_group.main.location
   resource_group_name  = azurerm_resource_group.main.name
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
@@ -164,8 +169,9 @@ resource "azurerm_managed_disk" "main" {
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "main" {
-  virtual_machine_id = azurerm_linux_virtual_machine.main.id
-  managed_disk_id    = azurerm_managed_disk.main.id
+  count              = var.vm_machine_count
+  virtual_machine_id = azurerm_linux_virtual_machine.main[count.index].id
+  managed_disk_id    = azurerm_managed_disk.main[count.index].id
   lun                = 0
   caching            = "None"
 }
