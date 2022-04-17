@@ -56,7 +56,8 @@ For this project, you will write a Packer template and a Terraform template to d
     * prefix: The prefix for all resources in the template
     * location: The Azure Region in which all resources in this example should be created.
     * username: The username of the account of the VM(s)
-    * source_image_id: The ID of the source image for the VM(s)
+    * source_image_name: The name of the source image deployed by packer
+    * source_image_rg: The name of the resource group of the source image deployed by packer
     * vm_machine_count: The number of virtual machines to deploy
 
 
