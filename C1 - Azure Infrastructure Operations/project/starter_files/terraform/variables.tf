@@ -10,7 +10,7 @@ variable "location" {
 
 variable "username" {
   description = "The username of the account of the vm"
-  default = "root"
+  default = "admin_user"
 }
 
 variable "source_image_name" {
