@@ -52,7 +52,7 @@ For this project, you will write a Packer template and a Terraform template to d
     terraform plan --out solution.plan -var 'variable=varaible_value'
     terraform apply solution.plan 
 ```
-7. Required variables are defined in variables.tf
+7. Required variables are defined in variables.tf. Default values can be added to the file or value could be passed through cmdline when running terraform plan
     * prefix: The prefix for all resources in the template
     * location: The Azure Region in which all resources in this example should be created.
     * username: The username of the account of the VM(s)
